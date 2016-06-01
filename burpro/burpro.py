@@ -36,10 +36,12 @@ if __name__ == "__main__":
     date_col = 'Date (MM/DD/YYYY)'
     time_col = 'Time (HH:MM:SS)'
     index_timezone = "Datetime (PST)"
-
+    # end constants
     if os.path.isfile(fin):
+        # if .xlsx file exists, then read it into a dataframe
         df_exo = pd.read_excel(fin, header=None)
     else:
+        # otherwise, break out of the script with an error message
         sys.exit('filepath: "%s" not found' % fin)
         # make a copy of the read in dataframe for processing
     frame = df_exo.copy()
@@ -49,16 +51,20 @@ if __name__ == "__main__":
     # find starting row by locating indicator date field
     nrow = frame.iloc[:, 0].isin([date_col]).idxmax(axis=0,
                                                     skipna=True)
+    # grab list of probes by model name
     probe = frame.iloc[sn_start:nrow-2, 0].tolist()
+    # grab list of probe serial numbers
     sn = frame.iloc[sn_start:nrow-2, 1].tolist()
+    # grab list of probe firmware versions
     firmware = frame.iloc[sn_start:nrow-2, 2].tolist()
-
+    # combine probe information into dicts
     sensors = dict(zip(probe, sn))
     sensors_fw = dict(zip(probe, firmware))
-    # lasso sensor data lcoated in the dataframe
+    # lasso sensor data located in the dataframe
     frame = frame.iloc[nrow:, :]
+    # set the dataframe column keys to the first row in the dataframe
     frame.columns = frame.iloc[0, :]
-    # rename duplicate columns tfor sensor swaps
+    # rename duplicate columns for sensor swaps
     cols = pd.Series(frame.columns)
     for dup in frame.columns.get_duplicates():
         cols[frame.columns.get_loc(dup)] = [dup + '.' + str(d_idx)
@@ -68,12 +74,16 @@ if __name__ == "__main__":
                                             frame.columns.get_loc(dup).sum())]
     frame.columns = cols
     frame.drop(frame.index[0], inplace=True)
-
+    # create dataframe of/from date col
     df_date = frame[date_col].copy()
+    # create dataframe of/from time col
     df_time = frame[time_col].copy()
+    # convert time data to a string
     df_time = df_time.astype(str)
+    # create a new date + time column from date and time dataframes
     frame['date'] = frame[date_col].apply(
                            lambda x: datetime.datetime.strftime(x, "%Y-%m-%d"))
+    # convert new date + time colum to date time index and set a df's index
     frame.index = pd.to_datetime(frame['date'] + ' ' + df_time)
     # remove columns that arent needed
     drop_cols = [date_col,
@@ -91,7 +101,7 @@ if __name__ == "__main__":
                  u'Sal psu',
                  u'nLF Cond µS/cm',
                  u'Cond µS/cm']
-
+    # drop unnecessary cols from data frame, frame
     frame = drop_columns(frame, drop_cols)
     # concat like columns with different serials from sensor swaps
     params = list(frame)
@@ -109,14 +119,17 @@ if __name__ == "__main__":
     frame.fillna(null_value, inplace=True)
     # rename index axis
     frame.index.name = index_timezone
-
+    # convert dataframe contents to floats for stat. analysis
     df_exo_float = frame.astype('float', copy=True)
     # group bursts by interval
     grouped = df_exo_float.groupby(pd.TimeGrouper(str(interval) + 'Min'),
                                    sort=False)
     # calc median
+    # aggregate bursts by interval and apply the built in median function
     exo_median = grouped.aggregate('median')
+    # replace the null values to nans so they are written as blanks in xlsx
     exo_median.replace(to_replace=null_value, value=np.nan, inplace=True)
+    # write dataframe to xlsx datafile
     exo_median.to_excel(fin.replace('.xlsx', '_median.xlsx'))
     # calc mean
     exo_mean = grouped.aggregate('mean')
@@ -124,6 +137,7 @@ if __name__ == "__main__":
     exo_mean.to_excel(fin.replace('.xlsx', '_mean.xlsx'))
     # calc median absolute deviation
     exo_mad = pd.DataFrame()
+    # apply the mad calculation column wise to data frame
     for i in np.arange(0, len(df_exo_float.columns), 1):
         exo_mad[df_exo_float.columns[i]] = grouped[
                                            df_exo_float.columns[i]].apply(
