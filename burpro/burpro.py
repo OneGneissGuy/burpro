@@ -1,0 +1,132 @@
+# -*- coding: utf-8 -*-
+"""
+:DESCRIPTION: This code processes EXO KOR Burst data files
+
+:REQUIRES: helper_funcs.py, .xlsx burst data files in cwd folder 'data'
+
+:TODO: Add support to read in multiple files in a directory
+
+:AUTHOR: John Franco Saraceno
+:ORGANIZATION: U.S. Geological Survey, United States Department of Interior
+:CONTACT: saraceno@usgs.gov
+:VERSION: 0.1
+Tue May 31 17:03:37 2016
+"""
+# =============================================================================
+# IMPORT STATEMENTS
+# =============================================================================
+import datetime
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+
+from helper_funcs import custom_mad, drop_columns, has_numbers
+# =============================================================================
+# MAIN METHOD AND TESTING AREA
+# =============================================================================
+# %%
+if __name__ == "__main__":
+    # constants
+    fin = r'data\TOE_12G104073_021116_150000.xlsx'
+    interval = 15
+    null_value = -9999
+    mad_criteria = 2.5
+    date_col = 'Date (MM/DD/YYYY)'
+    time_col = 'Time (HH:MM:SS)'
+    index_timezone = "Datetime (PST)"
+
+    if os.path.isfile(fin):
+        df_exo = pd.read_excel(fin, header=None)
+    else:
+        sys.exit('filepath: "%s" not found' % fin)
+        # make a copy of the read in dataframe for processing
+    frame = df_exo.copy()
+    # find starting row by locating Sonde model indicator field
+    sn_start = frame.iloc[:, 0].isin([u'EXO2 Sonde']).idxmax(axis=0,
+                                                             skipna=True)
+    # find starting row by locating indicator date field
+    nrow = frame.iloc[:, 0].isin([date_col]).idxmax(axis=0,
+                                                    skipna=True)
+    probe = frame.iloc[sn_start:nrow-2, 0].tolist()
+    sn = frame.iloc[sn_start:nrow-2, 1].tolist()
+    firmware = frame.iloc[sn_start:nrow-2, 2].tolist()
+
+    sensors = dict(zip(probe, sn))
+    sensors_fw = dict(zip(probe, firmware))
+    # lasso sensor data lcoated in the dataframe
+    frame = frame.iloc[nrow:, :]
+    frame.columns = frame.iloc[0, :]
+    # rename duplicate columns tfor sensor swaps
+    cols = pd.Series(frame.columns)
+    for dup in frame.columns.get_duplicates():
+        cols[frame.columns.get_loc(dup)] = [dup + '.' + str(d_idx)
+                                            if d_idx != 0 else dup
+                                            for d_idx in
+                                            range(
+                                            frame.columns.get_loc(dup).sum())]
+    frame.columns = cols
+    frame.drop(frame.index[0], inplace=True)
+
+    df_date = frame[date_col].copy()
+    df_time = frame[time_col].copy()
+    df_time = df_time.astype(str)
+    frame['date'] = frame[date_col].apply(
+                           lambda x: datetime.datetime.strftime(x, "%Y-%m-%d"))
+    frame.index = pd.to_datetime(frame['date'] + ' ' + df_time)
+    # remove columns that arent needed
+    drop_cols = [date_col,
+                 time_col,
+                 u'Site Name',
+                 u'date',
+                 u'Time (Fract. Sec)',
+                 u'Fault Code',
+                 u'Battery V',
+                 u'Cable Pwr V',
+                 u'TSS mg/L',
+                 u'TDS mg/L',
+                 u'Press psi a',
+                 u'Depth m',
+                 u'Sal psu',
+                 u'nLF Cond µS/cm',
+                 u'Cond µS/cm']
+
+    frame = drop_columns(frame, drop_cols)
+    # concat like columns with different serials from sensor swaps
+    params = list(frame)
+    dup_params = ['fDOM RFU',
+                  u'fDOM QSU',
+                  u'Chlorophyll RFU',
+                  u'Chlorophyll µg/L',
+                  u'BGA-PC RFU',
+                  u'BGA-PC µg/L',
+                  ]
+    # now drop any column names that have numbers in them
+    for i in params:
+        if has_numbers(i):
+            frame.drop(i, axis=1, inplace=True)
+    frame.fillna(null_value, inplace=True)
+    # rename index axis
+    frame.index.name = index_timezone
+
+    df_exo_float = frame.astype('float', copy=True)
+    # group bursts by interval
+    grouped = df_exo_float.groupby(pd.TimeGrouper(str(interval) + 'Min'),
+                                   sort=False)
+    # calc median
+    exo_median = grouped.aggregate('median')
+    exo_median.replace(to_replace=null_value, value=np.nan, inplace=True)
+    exo_median.to_excel(fin.replace('.xlsx', '_median.xlsx'))
+    # calc mean
+    exo_mean = grouped.aggregate('mean')
+    exo_mean.replace(to_replace=null_value, value=np.nan, inplace=True)
+    exo_mean.to_excel(fin.replace('.xlsx', '_mean.xlsx'))
+    # calc median absolute deviation
+    exo_mad = pd.DataFrame()
+    for i in np.arange(0, len(df_exo_float.columns), 1):
+        exo_mad[df_exo_float.columns[i]] = grouped[
+                                           df_exo_float.columns[i]].apply(
+                                           custom_mad, criteria=mad_criteria)
+    exo_mad.replace(to_replace=null_value, value=np.nan, inplace=True)
+    exo_mad.to_excel(fin.replace('.xlsx', '_mad.xlsx'))
