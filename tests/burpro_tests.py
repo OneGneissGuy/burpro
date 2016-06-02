@@ -1,5 +1,5 @@
 from nose.tools import *
-import NAME
+import burpro
 
 def setup():
     print "SETUP!"
