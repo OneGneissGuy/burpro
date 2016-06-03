@@ -4,7 +4,9 @@
 
 :REQUIRES: helper_funcs.py, .xlsx burst data files in cwd folder "data"
 
-:TODO: Add support to read in multiple files in a directory
+:#TODO:
+1) Add support to read in multiple files in a directory
+2) Add support to write mad files to csv format
 
 :AUTHOR: John Franco Saraceno
 :ORGANIZATION: U.S. Geological Survey, United States Department of Interior
@@ -32,13 +34,14 @@ from helper_funcs import custom_mad, drop_columns, has_numbers, read_json_file
 
 
 def main(**run_params):
-    print 'Run Started!'
+    print 'Run started, this could take a minute, please wait.....'
     params = run_params['gov.usgs.cawsc.bgctech.burpro']
-    filename = os.sep.join([params['directory'], params['filename']])
-    interval = params['interval']
-    drop_cols = params['drop_cols']
-    index_timezone = params['index_timezone']
-    mad_criteria = params['mad_criteria']
+    filename = os.sep.join([params.get('directory', 'data'),
+                            params.get('filename', 'test_data_file.xlsx')])
+    interval = params.get('interval', 15)
+    drop_cols = params.get('drop_cols', [])
+    index_timezone = params.get('index_timezone', 'Datetime (PST)')
+    mad_criteria = params.get('mad_criteria', 2.5)
 
     date_col = drop_cols[0]
     time_col = drop_cols[1]
@@ -125,9 +128,10 @@ def main(**run_params):
                                            df_exo_float.columns[i]].apply(
                                            custom_mad, criteria=mad_criteria)
     exo_mad.replace(to_replace=null_value, value=np.nan, inplace=True)
+    print 'Writing output files...'
     exo_mad.to_excel(filename.replace(".xlsx", "_mad.xlsx"))
     # write csv
-    # exo_mad.to_csv(filename.replace(".xlsx", "_mad.csv"))
+    #    exo_mad.to_csv(filename.replace(".xlsx", "_mad.csv"))
     print 'Run completed!'
 
 # %%
