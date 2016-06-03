@@ -2,7 +2,7 @@
 """
 :DESCRIPTION: This code processes EXO KOR Burst data files
 
-:REQUIRES: helper_funcs.py, .xlsx burst data files in cwd folder 'data'
+:REQUIRES: helper_funcs.py, .xlsx burst data files in cwd folder "data"
 
 :TODO: Add support to read in multiple files in a directory
 
@@ -22,31 +22,38 @@ import sys
 import numpy as np
 import pandas as pd
 
-from helper_funcs import custom_mad, drop_columns, has_numbers
+from helper_funcs import custom_mad, drop_columns, has_numbers, read_json_file
+
 # =============================================================================
 # MAIN METHOD AND TESTING AREA
 # =============================================================================
+
+
 # %%
 if __name__ == "__main__":
-    # constants
-    fin = r'data\TOE_12G104073_021116_150000.xlsx'
-    interval = 15
-    null_value = -9999
-    mad_criteria = 2.5
-    date_col = 'Date (MM/DD/YYYY)'
-    time_col = 'Time (HH:MM:SS)'
-    index_timezone = "Datetime (PST)"
+    # read json file
+    run_params = read_json_file(r'json_files\run_params.json')
+    params = run_params['gov.usgs.cawsc.bgctech.burpro']
+    filename = os.sep.join([params['directory'], params['filename']])
+    interval = params['interval']
+    drop_cols = params['drop_cols']
+    index_timezone = params['index_timezone']
+    mad_criteria = params['mad_criteria']
+
+    date_col = drop_cols[0]
+    time_col = drop_cols[1]
     # end constants
-    if os.path.isfile(fin):
+    null_value = -9999
+    if os.path.isfile(filename):
         # if .xlsx file exists, then read it into a dataframe
-        df_exo = pd.read_excel(fin, header=None)
+        df_exo = pd.read_excel(filename, header=None)
     else:
         # otherwise, break out of the script with an error message
-        sys.exit('filepath: "%s" not found' % fin)
+        sys.exit("filepath: '%s' not found" % filename)
         # make a copy of the read in dataframe for processing
     frame = df_exo.copy()
     # find starting row by locating Sonde model indicator field
-    sn_start = frame.iloc[:, 0].isin([u'EXO2 Sonde']).idxmax(axis=0,
+    sn_start = frame.iloc[:, 0].isin([u"EXO2 Sonde"]).idxmax(axis=0,
                                                              skipna=True)
     # find starting row by locating indicator date field
     nrow = frame.iloc[:, 0].isin([date_col]).idxmax(axis=0,
@@ -67,7 +74,7 @@ if __name__ == "__main__":
     # rename duplicate columns for sensor swaps
     cols = pd.Series(frame.columns)
     for dup in frame.columns.get_duplicates():
-        cols[frame.columns.get_loc(dup)] = [dup + '.' + str(d_idx)
+        cols[frame.columns.get_loc(dup)] = [dup + "." + str(d_idx)
                                             if d_idx != 0 else dup
                                             for d_idx in
                                             range(
@@ -81,36 +88,22 @@ if __name__ == "__main__":
     # convert time data to a string
     df_time = df_time.astype(str)
     # create a new date + time column from date and time dataframes
-    frame['date'] = frame[date_col].apply(
+    frame["date"] = frame[date_col].apply(
                            lambda x: datetime.datetime.strftime(x, "%Y-%m-%d"))
-    # convert new date + time colum to date time index and set a df's index
-    frame.index = pd.to_datetime(frame['date'] + ' ' + df_time)
+    # convert new date + time colum to date time index and set a df"s index
+    frame.index = pd.to_datetime(frame["date"] + " " + df_time)
     # remove columns that arent needed
-    drop_cols = [date_col,
-                 time_col,
-                 u'Site Name',
-                 u'date',
-                 u'Time (Fract. Sec)',
-                 u'Fault Code',
-                 u'Battery V',
-                 u'Cable Pwr V',
-                 u'TSS mg/L',
-                 u'TDS mg/L',
-                 u'Press psi a',
-                 u'Depth m',
-                 u'Sal psu',
-                 u'nLF Cond µS/cm',
-                 u'Cond µS/cm']
+
     # drop unnecessary cols from data frame, frame
     frame = drop_columns(frame, drop_cols)
     # concat like columns with different serials from sensor swaps
     params = list(frame)
-    dup_params = ['fDOM RFU',
-                  u'fDOM QSU',
-                  u'Chlorophyll RFU',
-                  u'Chlorophyll µg/L',
-                  u'BGA-PC RFU',
-                  u'BGA-PC µg/L',
+    dup_params = ["fDOM RFU",
+                  u"fDOM QSU",
+                  u"Chlorophyll RFU",
+                  u"Chlorophyll µg/L",
+                  u"BGA-PC RFU",
+                  u"BGA-PC µg/L",
                   ]
     # now drop any column names that have numbers in them
     for i in params:
@@ -120,21 +113,10 @@ if __name__ == "__main__":
     # rename index axis
     frame.index.name = index_timezone
     # convert dataframe contents to floats for stat. analysis
-    df_exo_float = frame.astype('float', copy=True)
+    df_exo_float = frame.astype("float", copy=True)
     # group bursts by interval
-    grouped = df_exo_float.groupby(pd.TimeGrouper(str(interval) + 'Min'),
+    grouped = df_exo_float.groupby(pd.TimeGrouper(str(interval) + "Min"),
                                    sort=False)
-    # calc median
-    # aggregate bursts by interval and apply the built in median function
-    exo_median = grouped.aggregate('median')
-    # replace the null values to nans so they are written as blanks in xlsx
-    exo_median.replace(to_replace=null_value, value=np.nan, inplace=True)
-    # write dataframe to xlsx datafile
-    exo_median.to_excel(fin.replace('.xlsx', '_median.xlsx'))
-    # calc mean
-    exo_mean = grouped.aggregate('mean')
-    exo_mean.replace(to_replace=null_value, value=np.nan, inplace=True)
-    exo_mean.to_excel(fin.replace('.xlsx', '_mean.xlsx'))
     # calc median absolute deviation
     exo_mad = pd.DataFrame()
     # apply the mad calculation column wise to data frame
@@ -143,4 +125,6 @@ if __name__ == "__main__":
                                            df_exo_float.columns[i]].apply(
                                            custom_mad, criteria=mad_criteria)
     exo_mad.replace(to_replace=null_value, value=np.nan, inplace=True)
-    exo_mad.to_excel(fin.replace('.xlsx', '_mad.xlsx'))
+    exo_mad.to_excel(filename.replace(".xlsx", "_mad.xlsx"))
+    # write csv
+    # exo_mad.to_csv(filename.replace(".xlsx", "_mad.csv"))
