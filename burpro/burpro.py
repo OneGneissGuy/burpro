@@ -132,7 +132,7 @@ def main(**run_params):
 
 # %%
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=" JSON run settings file")
+    parser = argparse.ArgumentParser(description="JSON run settings file")
     parser.add_argument('filename', type=str)
     # get json file path passed to script at commandline
     json_filename = parser.parse_args()
