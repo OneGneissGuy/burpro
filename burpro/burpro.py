@@ -39,26 +39,7 @@ if __name__ == "__main__":
     drop_cols = params['drop_cols']
     index_timezone = params['index_timezone']
     mad_criteria = params['mad_criteria']
-    # constants
-#    filename = r"data\TOE_12G104073_021116_150000.xlsx"
-#    interval = 15
-#    mad_criteria = 2.5
-#    index_timezone = "Datetime (PST)"
-#    drop_cols = ["Date (MM/DD/YYYY)",
-#                 "Time (HH:MM:SS)",
-#                 u"Site Name",
-#                 u"date",
-#                 u"Time (Fract. Sec)",
-#                 u"Fault Code",
-#                 u"Battery V",
-#                 u"Cable Pwr V",
-#                 u"TSS mg/L",
-#                 u"TDS mg/L",
-#                 u"Press psi a",
-#                 u"Depth m",
-#                 u"Sal psu",
-#                 u"nLF Cond µS/cm",
-#                 u"Cond µS/cm"]
+
     date_col = drop_cols[0]
     time_col = drop_cols[1]
     # end constants
