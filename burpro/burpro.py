@@ -28,12 +28,9 @@ from helper_funcs import custom_mad, drop_columns, has_numbers, read_json_file
 # =============================================================================
 # MAIN METHOD AND TESTING AREA
 # =============================================================================
+def main(**run_params):
 
 
-# %%
-if __name__ == "__main__":
-    # read json file
-    run_params = read_json_file(r'json_files\run_params.json')
     params = run_params['gov.usgs.cawsc.bgctech.burpro']
     filename = os.sep.join([params['directory'], params['filename']])
     interval = params['interval']
@@ -66,8 +63,8 @@ if __name__ == "__main__":
     # grab list of probe firmware versions
     firmware = frame.iloc[sn_start:nrow-2, 2].tolist()
     # combine probe information into dicts
-    sensors = dict(zip(probe, sn))
-    sensors_fw = dict(zip(probe, firmware))
+#    sensors = dict(zip(probe, sn))
+#    sensors_fw = dict(zip(probe, firmware))
     # lasso sensor data located in the dataframe
     frame = frame.iloc[nrow:, :]
     # set the dataframe column keys to the first row in the dataframe
@@ -83,7 +80,7 @@ if __name__ == "__main__":
     frame.columns = cols
     frame.drop(frame.index[0], inplace=True)
     # create dataframe of/from date col
-    df_date = frame[date_col].copy()
+#    df_date = frame[date_col].copy()
     # create dataframe of/from time col
     df_time = frame[time_col].copy()
     # convert time data to a string
@@ -99,13 +96,13 @@ if __name__ == "__main__":
     frame = drop_columns(frame, drop_cols)
     # concat like columns with different serials from sensor swaps
     params = list(frame)
-    dup_params = ["fDOM RFU",
-                  u"fDOM QSU",
-                  u"Chlorophyll RFU",
-                  u"Chlorophyll µg/L",
-                  u"BGA-PC RFU",
-                  u"BGA-PC µg/L",
-                  ]
+#    dup_params = ["fDOM RFU",
+#                  u"fDOM QSU",
+#                  u"Chlorophyll RFU",
+#                  u"Chlorophyll µg/L",
+#                  u"BGA-PC RFU",
+#                  u"BGA-PC µg/L",
+#                  ]
     # now drop any column names that have numbers in them
     for i in params:
         if has_numbers(i):
@@ -129,3 +126,9 @@ if __name__ == "__main__":
     exo_mad.to_excel(filename.replace(".xlsx", "_mad.xlsx"))
     # write csv
     # exo_mad.to_csv(filename.replace(".xlsx", "_mad.csv"))
+
+# %%
+if __name__ == "__main__":
+    # read json file
+    kwargs = read_json_file(r'json_files\run_params.json')
+    main(**kwargs)
