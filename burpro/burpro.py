@@ -17,43 +17,23 @@ Tue May 31 17:03:37 2016
 # =============================================================================
 import datetime
 import os
-import json
 import sys
 
 import numpy as np
 import pandas as pd
 
-from helper_funcs import custom_mad, drop_columns, has_numbers
-# =============================================================================
-# METHODS
-
-
-def read_json_file(json_file_path):
-    """This function reads in a json file and outputs the info
-    as a python dictionary"""
-    try:
-        with open(json_file_path) as data_file:
-            json_data = json.load(data_file)
-    except IOError as e:
-        print e
-    else:
-        return json_data
-
-# =============================================================================
+from helper_funcs import custom_mad, drop_columns, has_numbers, read_json_file
 
 # =============================================================================
 # MAIN METHOD AND TESTING AREA
 # =============================================================================
 
 
-def main(**kwargs):
-    print kwargs
-
 # %%
 if __name__ == "__main__":
     # read json file
-    p = read_json_file(r'json_files\run_params.json')
-    params = p['gov.usgs.cawsc.bgctech.burpro']
+    run_params = read_json_file(r'json_files\run_params.json')
+    params = run_params['gov.usgs.cawsc.bgctech.burpro']
     filename = os.sep.join([params['directory'], params['filename']])
     interval = params['interval']
     drop_cols = params['drop_cols']
@@ -156,17 +136,6 @@ if __name__ == "__main__":
     # group bursts by interval
     grouped = df_exo_float.groupby(pd.TimeGrouper(str(interval) + "Min"),
                                    sort=False)
-    # calc median
-    # aggregate bursts by interval and apply the built in median function
-    exo_median = grouped.aggregate("median")
-    # replace the null values to nans so they are written as blanks in xlsx
-    exo_median.replace(to_replace=null_value, value=np.nan, inplace=True)
-    # write dataframe to xlsx datafile
-    exo_median.to_excel(fin.replace(".xlsx", "_median.xlsx"))
-    # calc mean
-    exo_mean = grouped.aggregate("mean")
-    exo_mean.replace(to_replace=null_value, value=np.nan, inplace=True)
-    exo_mean.to_excel(fin.replace(".xlsx", "_mean.xlsx"))
     # calc median absolute deviation
     exo_mad = pd.DataFrame()
     # apply the mad calculation column wise to data frame
@@ -175,4 +144,6 @@ if __name__ == "__main__":
                                            df_exo_float.columns[i]].apply(
                                            custom_mad, criteria=mad_criteria)
     exo_mad.replace(to_replace=null_value, value=np.nan, inplace=True)
-    exo_mad.to_excel(fin.replace(".xlsx", "_mad.xlsx"))
+    exo_mad.to_excel(filename.replace(".xlsx", "_mad.xlsx"))
+    # write csv
+    # exo_mad.to_csv(filename.replace(".xlsx", "_mad.csv"))
