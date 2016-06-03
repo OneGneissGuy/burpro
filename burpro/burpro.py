@@ -52,15 +52,15 @@ def main(**kwargs):
 # %%
 if __name__ == "__main__":
     # read json file
-    params = read_json_file(r'C:\Users\saraceno\Documents\Code\Python\repos\burpro\burpro\json_files\run_params.json')
-    params = params['gov.usgs.cawsc.bgctech.burpro']
-    fin = os.sep.join([params['directory'], params['filename']])
+    p = read_json_file(r'json_files\run_params.json')
+    params = p['gov.usgs.cawsc.bgctech.burpro']
+    filename = os.sep.join([params['directory'], params['filename']])
     interval = params['interval']
     drop_cols = params['drop_cols']
     index_timezone = params['index_timezone']
     mad_criteria = params['mad_criteria']
     # constants
-#    fin = r"data\TOE_12G104073_021116_150000.xlsx"
+#    filename = r"data\TOE_12G104073_021116_150000.xlsx"
 #    interval = 15
 #    mad_criteria = 2.5
 #    index_timezone = "Datetime (PST)"
@@ -83,12 +83,12 @@ if __name__ == "__main__":
     time_col = drop_cols[1]
     # end constants
     null_value = -9999
-    if os.path.isfile(fin):
+    if os.path.isfile(filename):
         # if .xlsx file exists, then read it into a dataframe
-        df_exo = pd.read_excel(fin, header=None)
+        df_exo = pd.read_excel(filename, header=None)
     else:
         # otherwise, break out of the script with an error message
-        sys.exit("filepath: '%s' not found" % fin)
+        sys.exit("filepath: '%s' not found" % filename)
         # make a copy of the read in dataframe for processing
     frame = df_exo.copy()
     # find starting row by locating Sonde model indicator field
