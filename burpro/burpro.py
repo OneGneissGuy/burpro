@@ -16,6 +16,7 @@ Tue May 31 17:03:37 2016
 # =============================================================================
 # IMPORT STATEMENTS
 # =============================================================================
+import argparse
 import datetime
 import os
 import sys
@@ -30,10 +31,8 @@ from helper_funcs import custom_mad, drop_columns, has_numbers, read_json_file
 # =============================================================================
 
 
-# %%
-if __name__ == "__main__":
-    # read json file
-    run_params = read_json_file(r'json_files\run_params.json')
+def main(**run_params):
+    print 'Run Started!'
     params = run_params['gov.usgs.cawsc.bgctech.burpro']
     filename = os.sep.join([params['directory'], params['filename']])
     interval = params['interval']
@@ -54,20 +53,20 @@ if __name__ == "__main__":
         # make a copy of the read in dataframe for processing
     frame = df_exo.copy()
     # find starting row by locating Sonde model indicator field
-    sn_start = frame.iloc[:, 0].isin([u"EXO2 Sonde"]).idxmax(axis=0,
-                                                             skipna=True)
+#    sn_start = frame.iloc[:, 0].isin([u"EXO2 Sonde"]).idxmax(axis=0,
+#                                                             skipna=True)
     # find starting row by locating indicator date field
     nrow = frame.iloc[:, 0].isin([date_col]).idxmax(axis=0,
                                                     skipna=True)
     # grab list of probes by model name
-    probe = frame.iloc[sn_start:nrow-2, 0].tolist()
+#    probe = frame.iloc[sn_start:nrow-2, 0].tolist()
     # grab list of probe serial numbers
-    sn = frame.iloc[sn_start:nrow-2, 1].tolist()
+#    sn = frame.iloc[sn_start:nrow-2, 1].tolist()
     # grab list of probe firmware versions
-    firmware = frame.iloc[sn_start:nrow-2, 2].tolist()
+#    firmware = frame.iloc[sn_start:nrow-2, 2].tolist()
     # combine probe information into dicts
-    sensors = dict(zip(probe, sn))
-    sensors_fw = dict(zip(probe, firmware))
+#    sensors = dict(zip(probe, sn))
+#    sensors_fw = dict(zip(probe, firmware))
     # lasso sensor data located in the dataframe
     frame = frame.iloc[nrow:, :]
     # set the dataframe column keys to the first row in the dataframe
@@ -83,7 +82,7 @@ if __name__ == "__main__":
     frame.columns = cols
     frame.drop(frame.index[0], inplace=True)
     # create dataframe of/from date col
-    df_date = frame[date_col].copy()
+#    df_date = frame[date_col].copy()
     # create dataframe of/from time col
     df_time = frame[time_col].copy()
     # convert time data to a string
@@ -99,13 +98,13 @@ if __name__ == "__main__":
     frame = drop_columns(frame, drop_cols)
     # concat like columns with different serials from sensor swaps
     params = list(frame)
-    dup_params = ["fDOM RFU",
-                  u"fDOM QSU",
-                  u"Chlorophyll RFU",
-                  u"Chlorophyll µg/L",
-                  u"BGA-PC RFU",
-                  u"BGA-PC µg/L",
-                  ]
+#    dup_params = ["fDOM RFU",
+#                  u"fDOM QSU",
+#                  u"Chlorophyll RFU",
+#                  u"Chlorophyll µg/L",
+#                  u"BGA-PC RFU",
+#                  u"BGA-PC µg/L",
+#                  ]
     # now drop any column names that have numbers in them
     for i in params:
         if has_numbers(i):
@@ -129,3 +128,15 @@ if __name__ == "__main__":
     exo_mad.to_excel(filename.replace(".xlsx", "_mad.xlsx"))
     # write csv
     # exo_mad.to_csv(filename.replace(".xlsx", "_mad.csv"))
+    print 'Run completed!'
+
+# %%
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="JSON run settings file")
+    parser.add_argument('filename', type=str)
+    # get json file path passed to script at commandline
+    json_filename = parser.parse_args()
+    # read json file
+    kwargs = read_json_file(json_filename.filename)
+    # pass run params from json file onto main program
+    main(**kwargs)
