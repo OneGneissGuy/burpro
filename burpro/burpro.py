@@ -33,9 +33,7 @@ from helper_funcs import custom_mad, drop_columns, has_numbers, read_json_file
 
 def main(**run_params):
     print 'Run Started!'
-    print run_params
     params = run_params['gov.usgs.cawsc.bgctech.burpro']
-
     filename = os.sep.join([params['directory'], params['filename']])
     interval = params['interval']
     drop_cols = params['drop_cols']
@@ -139,8 +137,6 @@ if __name__ == "__main__":
     # get json file path passed to script at commandline
     json_filename = parser.parse_args()
     # read json file
-    print 'reading json file:', json_filename.filename
     kwargs = read_json_file(json_filename.filename)
-    print kwargs
     # pass run params from json file onto main program
     main(**kwargs)
