@@ -20,7 +20,7 @@
                        "mad_criteria": 2.5,
 					   "interval" : 15,
 					   "directory" : "data",
-					   "filename" : "TOE_12G104073_021116_150000.xlsx",
+					   "filename" : "test_data_file.xlsx",
 					   "index_timezone" : "Datetime (PST)"
         }
 }
