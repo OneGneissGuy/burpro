@@ -17,12 +17,30 @@ Tue May 31 17:03:37 2016
 # =============================================================================
 import datetime
 import os
+import json
 import sys
 
 import numpy as np
 import pandas as pd
 
 from helper_funcs import custom_mad, drop_columns, has_numbers
+# =============================================================================
+# METHODS
+
+
+def read_json_file(json_file_path):
+    """This function reads in a json file and outputs the info
+    as a python dictionary"""
+    try:
+        with open(json_file_path) as data_file:
+            json_data = json.load(data_file)
+    except IOError as e:
+        print e
+    else:
+        return json_data
+
+# =============================================================================
+
 # =============================================================================
 # MAIN METHOD AND TESTING AREA
 # =============================================================================
