@@ -75,27 +75,29 @@ def schema_json():
         "properties": {
             "drop_cols": {
                 "type": "array",
+                "required": True
             },
             "mad_criteria": {
                 "type": "number",
+                "required": False,
+                "minimum": 2,
+                "maximum": 3,
             },
-            # even though "three" is missing, it will pass validation
-            # because required = False
             "interval": {
                 "type": "integer",
                 "required": False
             },
             "directory": {
                 "type": "string",
-                "required": False
+                "required": True
             },
             "filename": {
                 "type": "string",
-                "required": False
+                "required": True
             },
             "index_timezone": {
                 "type": "string",
-                "required": False
+                "required": True
             }
             }
     }

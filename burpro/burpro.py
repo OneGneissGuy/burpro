@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 
 from helper_funcs import custom_mad, drop_columns, has_numbers, read_json_file
+from helper_funcs import validate_json, schema_json
 
 # =============================================================================
 # MAIN METHOD AND TESTING AREA
@@ -138,9 +139,10 @@ def main(**run_params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="JSON run settings file")
     parser.add_argument('filename', type=str)
-    # get json file path passed to script at commandline
+    # get json file path passed to script at command line
     json_filename = parser.parse_args()
     # read json file
+    validate_json(json_filename.filename)
     kwargs = read_json_file(json_filename.filename)
     # pass run params from json file onto main program
     main(**kwargs)
