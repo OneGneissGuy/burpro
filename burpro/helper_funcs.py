@@ -1,7 +1,11 @@
 import json
+import os
+
 import numpy as np
 import numpy.ma as ma
 import statsmodels.robust.scale as smc
+
+import validictory
 
 
 def custom_mad(array_like, criteria=2.5,):
@@ -45,7 +49,12 @@ def has_numbers(inputString):
     string, string like
     RETURNS:
     bool"""
-    return any(char.isdigit() for char in inputString)
+    try:
+        string = any(char.isdigit() for char in inputString)
+    except TypeError:
+        print 'argument must be a string'
+    else:
+        return string
 
 
 def read_json_file(json_file_path):
@@ -54,7 +63,49 @@ def read_json_file(json_file_path):
     try:
         with open(json_file_path) as data_file:
             json_data = json.load(data_file)
-    except IOError as e:
-        print e
+    except IOError, ioex:
+        print os.strerror(ioex.errno), json_file_path
     else:
         return json_data
+
+
+def schema_json():
+    schema = {
+        "type": "object",
+        "properties": {
+            "drop_cols": {
+                "type": "array",
+            },
+            "mad_criteria": {
+                "type": "number",
+            },
+            # even though "three" is missing, it will pass validation
+            # because required = False
+            "interval": {
+                "type": "integer",
+                "required": False
+            },
+            "directory": {
+                "type": "string",
+                "required": False
+            },
+            "filename": {
+                "type": "string",
+                "required": False
+            },
+            "index_timezone": {
+                "type": "string",
+                "required": False
+            }
+            }
+    }
+    return schema
+
+
+def validate_json(json_data_file):
+    """this function validates a json file based
+        on schema_json func return"""
+    json_data = read_json_file(json_data_file)
+    json_data = json_data[json_data.keys()[0]]
+    schema = schema_json()
+    return validictory.validate(json_data, schema)
