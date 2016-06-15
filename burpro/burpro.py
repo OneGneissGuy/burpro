@@ -41,7 +41,7 @@ def main(exo_filename):
     json_filename = 'run_params.json'
     #    # read json file
 
-    #    validate_json(json_filename.filename)
+    validate_json(json_filename)
     run_params = read_json_file(json_filename)
     params = run_params['gov.usgs.cawsc.bgctech.burpro']
 #    filename = os.sep.join([params.get('directory', 'data'),

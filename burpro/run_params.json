@@ -19,8 +19,6 @@
 								 "Cond µS/cm"],
                        "mad_criteria": 2.5,
 					   "interval" : 15,
-					   "directory" : "data",
-					   "filename" : "test_data_file.xlsx",
 					   "index_timezone" : "Datetime (PST)"
         }
 }

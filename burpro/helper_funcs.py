@@ -70,6 +70,7 @@ def read_json_file(json_file_path):
 
 
 def schema_json():
+    #TODO: read in schema from a file
     schema = {
         "type": "object",
         "properties": {
@@ -85,15 +86,9 @@ def schema_json():
             },
             "interval": {
                 "type": "integer",
-                "required": False
-            },
-            "directory": {
-                "type": "string",
-                "required": True
-            },
-            "filename": {
-                "type": "string",
-                "required": True
+                "required": False,
+                "minimum": 15,
+                "maximum": 60,
             },
             "index_timezone": {
                 "type": "string",
@@ -113,6 +108,7 @@ def validate_json(json_data_file):
     try:
         validictory.validate(json_data, schema)
     except ValueError, error:
+#        print 'Check json file format for errors'
         print error
     finally:
         return
