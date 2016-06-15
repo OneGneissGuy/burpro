@@ -27,18 +27,25 @@ import numpy as np
 import pandas as pd
 
 from helper_funcs import custom_mad, drop_columns, has_numbers, read_json_file
-from helper_funcs import validate_json, schema_json
+from helper_funcs import validate_json
 
 # =============================================================================
 # MAIN METHOD AND TESTING AREA
 # =============================================================================
 
 
-def main(**run_params):
+def main(exo_filename):
     print 'Run started, this could take a minute, please wait.....'
+    #TODO: hierarchal sjon support
+    #TODO: Look for json exo file direc then look in bat directory, etc.
+    json_filename = 'run_params.json'
+    #    # read json file
+
+    #    validate_json(json_filename.filename)
+    run_params = read_json_file(json_filename)
     params = run_params['gov.usgs.cawsc.bgctech.burpro']
-    filename = os.sep.join([params.get('directory', 'data'),
-                            params.get('filename', 'test_data_file.xlsx')])
+#    filename = os.sep.join([params.get('directory', 'data'),
+#                            params.get('filename', 'test_data_file.xlsx')])
     interval = params.get('interval', 15)
     drop_cols = params.get('drop_cols', [])
     index_timezone = params.get('index_timezone', 'Datetime (PST)')
@@ -48,12 +55,12 @@ def main(**run_params):
     time_col = drop_cols[1]
     # end constants
     null_value = -9999
-    if os.path.isfile(filename):
+    if os.path.isfile(exo_filename):
         # if .xlsx file exists, then read it into a dataframe
-        df_exo = pd.read_excel(filename, header=None)
+        df_exo = pd.read_excel(exo_filename, header=None)
     else:
         # otherwise, break out of the script with an error message
-        sys.exit("filepath: '%s' not found" % filename)
+        sys.exit("filepath: '%s' not found" % exo_filename)
         # make a copy of the read in dataframe for processing
     frame = df_exo.copy()
     # find starting row by locating Sonde model indicator field
@@ -85,9 +92,7 @@ def main(**run_params):
                                             frame.columns.get_loc(dup).sum())]
     frame.columns = cols
     frame.drop(frame.index[0], inplace=True)
-    # create dataframe of/from date col
-#    df_date = frame[date_col].copy()
-    # create dataframe of/from time col
+
     df_time = frame[time_col].copy()
     # convert time data to a string
     df_time = df_time.astype(str)
@@ -102,14 +107,6 @@ def main(**run_params):
     frame = drop_columns(frame, drop_cols)
     # concat like columns with different serials from sensor swaps
     params = list(frame)
-#    dup_params = ["fDOM RFU",
-#                  u"fDOM QSU",
-#                  u"Chlorophyll RFU",
-#                  u"Chlorophyll µg/L",
-#                  u"BGA-PC RFU",
-#                  u"BGA-PC µg/L",
-#                  ]
-    # now drop any column names that have numbers in them
     for i in params:
         if has_numbers(i):
             frame.drop(i, axis=1, inplace=True)
@@ -130,19 +127,25 @@ def main(**run_params):
                                            custom_mad, criteria=mad_criteria)
     exo_mad.replace(to_replace=null_value, value=np.nan, inplace=True)
     print 'Writing output files...'
-    exo_mad.to_excel(filename.replace(".xlsx", "_mad.xlsx"))
+    exo_mad.to_excel(exo_filename.replace(".xlsx", "_mad.xlsx"))
     # write csv
-    #    exo_mad.to_csv(filename.replace(".xlsx", "_mad.csv"))
+    #    exo_mad.to_csv(exo_filename.replace(".xlsx", "_mad.csv"))
     print 'Run completed!'
 
 # %%
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="JSON run settings file")
-    parser.add_argument('filename', type=str)
-    # get json file path passed to script at command line
-    json_filename = parser.parse_args()
-    # read json file
-    validate_json(json_filename.filename)
-    kwargs = read_json_file(json_filename.filename)
-    # pass run params from json file onto main program
-    main(**kwargs)
+    #    parser = argparse.ArgumentParser(description="JSON run settings file")
+    #    parser.add_argument('filename', type=str)
+    #    # get json file path passed to script at command line
+    #    json_filename = parser.parse_args()
+    #    # read json file
+    #    validate_json(json_filename.filename)
+    #    kwargs = read_json_file(json_filename.filename)
+    #    # pass run params from json file onto main program
+    #    main(**kwargs)
+
+    parser = argparse.ArgumentParser(
+             description="KOR exo file")
+    parser.add_argument('exo_filename', type=str)
+    input_path = parser.parse_args()
+    main(input_path.exo_filename)

@@ -110,4 +110,9 @@ def validate_json(json_data_file):
     json_data = read_json_file(json_data_file)
     json_data = json_data[json_data.keys()[0]]
     schema = schema_json()
-    return validictory.validate(json_data, schema)
+    try:
+        validictory.validate(json_data, schema)
+    except ValueError, error:
+        print error
+    finally:
+        return
