@@ -4,7 +4,7 @@ from setuptools import setup
 from setuptools import find_packages
 pkgs = find_packages()
 
-with open('README.*') as f:
+with open('README.RST') as f:
     readme = f.read()
 
 with open('LICENSE') as f:
@@ -17,9 +17,9 @@ setup(name='burpro',
       platforms=['Microsoft :: Windows :: Windows 7'],
       author='John Franco Saraceno',
       author_email='saraceno@usgs.gov',
-      url='URL to get it at.',
-      download_url='Where to download it.',
-      install_requires=['nose'],
+      url='https://my.usgs.gov/bitbucket/projects/BGCTECH',
+      download_url='Where to download the file',
+      install_requires=['numpy', 'pandas', 'statsmodels', 'validictory'],
       scripts=[],
       Development=['Development Status :: 1 - Planning'],
       license=license,
