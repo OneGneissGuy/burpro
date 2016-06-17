@@ -111,7 +111,8 @@ def process(exo_filename, output_dir):
     
     #TODO: hierarchal sjon support
     #TODO: Look for json exo file direc then look in bat directory, etc.
-    json_filename = 'run_params.json'
+    script_path, script_name_only = os.path.split(os.path.realpath(__file__))
+    json_filename = os.path.join(script_path, 'config', 'run_params.json')
     #    # read json file
 
     validate_json(json_filename)
