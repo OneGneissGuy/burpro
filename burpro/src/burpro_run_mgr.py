@@ -1,61 +1,49 @@
-import json
+# -*- coding: utf-8 -*-
+"""
+:DESCRIPTION: This code reads configuration information and launches processing of intput data
+
+:REQUIRES: burpro_process.py, .json configuration files
+
+:#TODO:
+1) Add support to read in multiple files in a directory
+
+:AUTHOR: John Franco Saraceno, John M. Donovan
+:ORGANIZATION: U.S. Geological Survey, United States Department of Interior
+:CONTACT: saraceno@usgs.gov, jmd@usgs.gov
+
+"""
+# =============================================================================
+# IMPORT STATEMENTS
+# =============================================================================
 import os
-
-import numpy as np
-import numpy.ma as ma
-import statsmodels.robust.scale as smc
-
+import os.path
+import logging
+import json
 import validictory
 
+from burpro_process import process
+    
+def manage_run(exo_filename, output_dir):
+    
+    log = logging.getLogger('BurPro')
+    log.info('Reading configuration...')
 
-def custom_mad(array_like, criteria=2.5,):
-# TODO: Add support for all NAN arrays
-    """Function to calculate the median absoilute deviation of an array
-    INPUT:
-    array-like
-    RETURNS:
-    float"""
-    MAD = smc.mad(array_like)
-    k = (MAD*criteria)
-    M = np.nanmedian(array_like)
-    high = M + k
-    low = M - k
-    b = ma.masked_outside(array_like, high, low)
-    c = ma.compressed(b)
-    return np.nanmedian(c)
+    params = read_json_params()
+    
+    process(exo_filename, output_dir, params)
+    
+def read_json_params():
+    #TODO: hierarchal json support
+    #TODO: Look for json exo file direc then look in bat directory, etc.
+    script_path, script_name_only = os.path.split(os.path.realpath(__file__))
+    json_filename = os.path.join(script_path, 'config', 'run_params.json')
+    #    # read json file
 
-
-def drop_columns(dataframe, cols):
-    """This function drops dataframe columns contained in cols
-    INPUT:
-    pandas dataframe
-    list of column names, list like
-    RETURNS:
-    pandas dataframe less columns in cols"""
-    frame = dataframe.copy()
-    for i in cols:
-        if i in frame.columns:
-            frame.drop(i, inplace=True, axis=1)
-    return frame
-
-
-def find_col_idx(params, field):
-    return [i for i, s in enumerate(params) if field in s]
-
-
-def has_numbers(inputString):
-    """This function identifies strings that contain numerical characters
-    INPUT:
-    string, string like
-    RETURNS:
-    bool"""
-    try:
-        string = any(char.isdigit() for char in inputString)
-    except TypeError:
-        print 'argument must be a string'
-    else:
-        return string
-
+    validate_json(json_filename)
+    run_params = read_json_file(json_filename)
+    params = run_params['gov.usgs.cawsc.bgctech.burpro']
+    
+    return params
 
 def read_json_file(json_file_path):
     """This function reads in a json file and outputs the info
@@ -112,3 +100,4 @@ def validate_json(json_data_file):
         print error
     finally:
         return
+
