@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-:DESCRIPTION: This code reads configuration information and launches processing of intput data
+:DESCRIPTION: This code reads configuration information and launches
+              processing of input data
 
 :REQUIRES: burpro_process.py, .json configuration files
 
@@ -22,16 +23,17 @@ import json
 import validictory
 
 from burpro_process import process
-    
+
+
 def manage_run(exo_filename, output_dir):
-    
+
     log = logging.getLogger('BurPro')
     log.info('Reading configuration...')
 
     params = read_json_params()
-    
     process(exo_filename, output_dir, params)
-    
+
+
 def read_json_params():
     #TODO: hierarchal json support
     #TODO: Look for json exo file direc then look in bat directory, etc.
@@ -42,8 +44,9 @@ def read_json_params():
     validate_json(json_filename)
     run_params = read_json_file(json_filename)
     params = run_params['gov.usgs.cawsc.bgctech.burpro']
-    
+
     return params
+
 
 def read_json_file(json_file_path):
     """This function reads in a json file and outputs the info
@@ -96,8 +99,7 @@ def validate_json(json_data_file):
     try:
         validictory.validate(json_data, schema)
     except ValueError, error:
-#        print 'Check json file format for errors'
+        #        print 'Check json file format for errors'
         print error
     finally:
         return
-

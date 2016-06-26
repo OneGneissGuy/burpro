@@ -27,19 +27,18 @@ import statsmodels.robust.scale as smc
 
 
 def process(exo_filename, output_dir, params):
-    
+
     interval = params.get('interval', 15)
     drop_cols = params.get('drop_cols', [])
     index_timezone = params.get('index_timezone', 'Datetime (PST)')
     mad_criteria = params.get('mad_criteria', 2.5)
-    
+
     date_col = drop_cols[0]
     time_col = drop_cols[1]
     # end constants
-    
+
     log = logging.getLogger('BurPro')
     log.info('Reading input...')
-
     null_value = -9999
     if os.path.isfile(exo_filename):
         # if .xlsx file exists, then read it into a dataframe
@@ -47,19 +46,37 @@ def process(exo_filename, output_dir, params):
     else:
         # otherwise, break out of the script with an error message
         sys.exit("filepath: '%s' not found" % exo_filename)
-        
+
     log.info('Processing...')
-    
+
     # make a copy of the read in dataframe for processing
-    df_exo_float, grouped = process_data_frame(df_exo, date_col, time_col, drop_cols, null_value, index_timezone, interval)
+    df_exo_float, grouped = process_data_frame(df_exo,
+                                               date_col,
+                                               time_col,
+                                               drop_cols,
+                                               null_value,
+                                               index_timezone,
+                                               interval)
 
     # calc median absolute deviation
-    exo_mad = calc_med_abs_dev(log, df_exo_float, grouped, mad_criteria, null_value)
+    exo_mad = calc_med_abs_dev(log,
+                               df_exo_float,
+                               grouped,
+                               mad_criteria,
+                               null_value)
 
     write_output(log, output_dir, exo_filename, exo_mad)
     log.info('Processing complete.')
-    
-def process_data_frame(df_exo, date_col, time_col, drop_cols, null_value, index_timezone, interval):
+
+
+def process_data_frame(df_exo,
+                       date_col,
+                       time_col,
+                       drop_cols,
+                       null_value,
+                       index_timezone,
+                       interval):
+
     frame = df_exo.copy()
     # find starting row by locating Sonde model indicator field
 #    sn_start = frame.iloc[:, 0].isin([u"EXO2 Sonde"]).idxmax(axis=0,
@@ -116,9 +133,10 @@ def process_data_frame(df_exo, date_col, time_col, drop_cols, null_value, index_
     # group bursts by interval
     grouped = df_exo_float.groupby(pd.TimeGrouper(str(interval) + "Min"),
                                    sort=False)
-                                   
+
     return df_exo_float, grouped
-                                   
+
+
 def calc_med_abs_dev(log, df_exo_float, grouped, mad_criteria, null_value):
     exo_mad = pd.DataFrame()
     # apply the mad calculation column wise to data frame
@@ -129,9 +147,10 @@ def calc_med_abs_dev(log, df_exo_float, grouped, mad_criteria, null_value):
                                            df_exo_float.columns[i]].apply(
                                            custom_mad, criteria=mad_criteria)
     exo_mad.replace(to_replace=null_value, value=np.nan, inplace=True)
-    
+
     return exo_mad
-    
+
+
 def write_output(log, output_dir, exo_filename, exo_mad):
     log.info('Writing output...')
     input_path, input_name_only = os.path.split(exo_filename)
@@ -189,4 +208,3 @@ def has_numbers(inputString):
         print 'argument must be a string'
     else:
         return string
-
