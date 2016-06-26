@@ -16,6 +16,7 @@
 # =============================================================================
 # IMPORT STATEMENTS
 # =============================================================================
+from __future__ import print_function
 import os
 import os.path
 import logging
@@ -55,13 +56,13 @@ def read_json_file(json_file_path):
         with open(json_file_path) as data_file:
             json_data = json.load(data_file)
     except IOError, ioex:
-        print os.strerror(ioex.errno), json_file_path
+        print(os.strerror(ioex.errno), json_file_path, sep=" ")
     else:
         return json_data
 
 
 def schema_json():
-    #TODO: read in schema from a file
+    #TODO: read in schema from a json file
     schema = {
         "type": "object",
         "properties": {
@@ -99,7 +100,7 @@ def validate_json(json_data_file):
     try:
         validictory.validate(json_data, schema)
     except ValueError, error:
-        #        print 'Check json file format for errors'
-        print error
+        #        print('Check json file format for errors')
+        print(error.message)
     finally:
         return

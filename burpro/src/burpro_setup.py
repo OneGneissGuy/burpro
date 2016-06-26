@@ -60,7 +60,7 @@ def handle_args(version, argv=None):
         raise Exception('BurPro must be given an input file for processing')
 
     print('USGS California Water Science Center')
-    print('BurPro Revision' + version, sep=' ')
+    print('BurPro Revision', version, sep=' ')
     print('Reading parameters...')
 
     parser = BurProArgumentParser(
@@ -76,7 +76,7 @@ def setup_output_dir(exo_filename):
     dir_name = dir_name + datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
     base_path = os.path.dirname(exo_filename)
     output_dir = os.path.join(base_path, dir_name)
-    print('Writing output to' + output_dir, sep=' ')
+    print('Writing output to', output_dir, sep=' ')
     os.makedirs(output_dir)
 
     return output_dir

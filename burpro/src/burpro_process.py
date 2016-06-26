@@ -15,15 +15,17 @@
 # =============================================================================
 # IMPORT STATEMENTS
 # =============================================================================
+from __future__ import print_function
 import logging
 import os
-import sys
 import datetime
 
 import numpy as np
 import pandas as pd
 import numpy.ma as ma
 import statsmodels.robust.scale as smc
+
+# from burpro_setup import setup_logging, report_setup_error
 
 
 def process(exo_filename, output_dir, params):
@@ -40,12 +42,13 @@ def process(exo_filename, output_dir, params):
     log = logging.getLogger('BurPro')
     log.info('Reading input...')
     null_value = -9999
-    if os.path.isfile(exo_filename):
+    try:
         # if .xlsx file exists, then read it into a dataframe
         df_exo = pd.read_excel(exo_filename, header=None)
-    else:
+    except IOError, ioerr:
         # otherwise, break out of the script with an error message
-        sys.exit("filepath: '%s' not found" % exo_filename)
+        log.info(ioerr.message)
+#        report_setup_error(ioerr)
 
     log.info('Processing...')
 
@@ -141,7 +144,7 @@ def calc_med_abs_dev(log, df_exo_float, grouped, mad_criteria, null_value):
     exo_mad = pd.DataFrame()
     # apply the mad calculation column wise to data frame
     for i in np.arange(0, len(df_exo_float.columns), 1):
-        step_number = '    (' + str(i+1) + ')'
+        step_number = '    (' + df_exo_float.columns[i] + ')'
         log.info(step_number)
         exo_mad[df_exo_float.columns[i]] = grouped[
                                            df_exo_float.columns[i]].apply(
@@ -205,6 +208,6 @@ def has_numbers(inputString):
     try:
         string = any(char.isdigit() for char in inputString)
     except TypeError:
-        print 'argument must be a string'
+        print('argument must be a string')
     else:
         return string
