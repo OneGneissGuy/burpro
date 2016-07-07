@@ -31,8 +31,8 @@ def manage_run(exo_filename, output_dir):
     log = logging.getLogger('BurPro')
     log.info('Reading configuration...')
 
-    params = read_json_params()
-    process(exo_filename, output_dir, params)
+    run_params = read_json_params()
+    process(exo_filename, output_dir, run_params)
 
 
 def read_json_params():

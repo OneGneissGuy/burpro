@@ -1,0 +1,19 @@
+# Download Anaconda 2.3.0 for python 2.7.10 64 bit edition 
+
+# Install Anaconda
+
+# Download BurPro
+
+# Unzip BurPro (to user directory)
+
+# cd into burpro directory
+
+# Automatically install dependencies
+
+# "python install setup.py"
+
+# OR 
+
+# Install dependencies manually using 
+
+# "pip install -r requirements.txt"

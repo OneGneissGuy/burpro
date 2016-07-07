@@ -46,6 +46,18 @@ def setup_logging(output_dir, version):
         return log
 
 
+def setup_logging_metadata(output_dir, version):
+    logger = logging.getLogger('exolog')
+    logging.basicConfig(filemode='w')
+    hdlr = logging.FileHandler(os.path.join(output_dir, 'exolog.log'))
+    # formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    formatter = logging.Formatter('%(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.DEBUG)
+    return logger
+
+
 def report_setup_error(error):
     print >>sys.stderr, 'BurPro Setup Error: ', error
     traceback.print_exc()

@@ -17,8 +17,8 @@ from __future__ import print_function
 import sys
 import logging
 
-from burpro_setup import handle_args, setup_output_dir
-from burpro_setup import setup_logging, report_setup_error
+from burpro_setup import handle_args, setup_output_dir, report_setup_error
+from burpro_setup import setup_logging, setup_logging_metadata
 from burpro_run_mgr import manage_run
 
 # =============================================================================
@@ -31,9 +31,11 @@ def main(argv=None):
         exo_filename = handle_args(burpro_version(), argv)
         output_dir = setup_output_dir(exo_filename)
         log = setup_logging(output_dir, burpro_version())
+        logger = setup_logging_metadata(output_dir, burpro_version())
         try:
             manage_run(exo_filename, output_dir)
             log.info('BurPro done.')
+            logger.info('End run summary log')
         except:
             # Logger is set up.  Handle an error by logging it and exiting
             log.error(logging.Formatter().formatException(sys.exc_info()))
