@@ -31,33 +31,17 @@ class BurProArgumentParser(argparse.ArgumentParser):
         raise Exception(message)
 
 
-def setup_logging(output_dir, version):
-    logging.basicConfig(filename=os.path.join(output_dir, 'burpro.log'))
-    log = logging.getLogger('BurPro')
-    log.setLevel(logging.INFO)
-    log.info('USGS California Water Science Center')
-    log.info('BurPro Revision ' + version)
+def setup_logger(logger_name, log_file, level=logging.INFO):
+    l = logging.getLogger(logger_name)
+    formatter = logging.Formatter('%(asctime)s : %(message)s')
+    fileHandler = logging.FileHandler(log_file, mode='w')
+    fileHandler.setFormatter(formatter)
+    streamHandler = logging.StreamHandler()
+    streamHandler.setFormatter(formatter)
 
-    formatter = logging.Formatter()
-    console = logging.StreamHandler()
-    console.setFormatter(formatter)
-    log.addHandler(console)
-
-    return log
-
-
-def setup_logging_metadata(output_dir, version):
-    logger = logging.getLogger('exolog')
-    logging.basicConfig(filemode='w')
-    hdlr = logging.FileHandler(os.path.join(output_dir, 'exolog.log'))
-    # formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    formatter = logging.Formatter('%(message)s')
-    hdlr.setFormatter(formatter)
-    logger.addHandler(hdlr)
-    logger.setLevel(logging.DEBUG)
-    logger.info('USGS California Water Science Center')
-    logger.info('BurPro Revision ' + version)
-    return logger
+    l.setLevel(level)
+    l.addHandler(fileHandler)
+    l.addHandler(streamHandler)
 
 
 def report_setup_error(error):

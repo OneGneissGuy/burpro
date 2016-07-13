@@ -14,13 +14,15 @@
 # IMPORT STATEMENTS
 # =============================================================================
 from __future__ import print_function
-import sys
+
+import datetime
 import logging
+import os
+import sys
 
 from burpro_setup import handle_args, setup_output_dir, report_setup_error
-from burpro_setup import setup_logging, setup_logging_metadata
+from burpro_setup import setup_logger
 from burpro_run_mgr import manage_run
-
 # =============================================================================
 # MAIN METHOD AND TESTING AREA
 # =============================================================================
@@ -30,12 +32,24 @@ def main(argv=None):
     try:
         exo_filename = handle_args(burpro_version(), argv)
         output_dir = setup_output_dir(exo_filename)
-        log = setup_logging(output_dir, burpro_version())
-        logger = setup_logging_metadata(output_dir, burpro_version())
+#        log = setup_logging(output_dir, burpro_version())
+#        logger = setup_logging_metadata(output_dir, burpro_version())
+        version = burpro_version()
+        run_log = 'BurPro'
+        device_log = 'EXOdevices'
+        log_ext = '.log'
+
+        setup_logger(run_log, os.path.join(output_dir, run_log + log_ext))
+        setup_logger(device_log, os.path.join(output_dir,
+                                              device_log + log_ext))
+# TODO: make these log instances more descriptive
+        log = logging.getLogger(run_log)
+        log.info('USGS California Water Science Center')
+        log.info('BurPro Revision ' + version)
+
         try:
             manage_run(exo_filename, output_dir)
             log.info('BurPro done.')
-            logger.info('End run summary log')
         except:
             # Logger is set up.  Handle an error by logging it and exiting
             log.error(logging.Formatter().formatException(sys.exc_info()))
@@ -46,7 +60,8 @@ def main(argv=None):
 
 
 def burpro_version():
-    return '2016-06-17'
+    # TODO: Return production code version, not current date when src is stable
+    return datetime.datetime.now().strftime("%Y-%m-%d")
 
 if __name__ == "__main__":
     sys.exit(main())

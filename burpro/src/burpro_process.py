@@ -126,8 +126,12 @@ def process(exo_filename, output_dir, params):
                                                sc_col,
                                                sc_cutoff,
                                                file_metadata)
-
-    write_device_to_json(os.sep.join([output_dir, 'device_meta_data.json']),
+    exo_filename_only = exo_filename.split(os.sep)[-1]
+    write_device_to_json(os.sep.join(
+                         [output_dir,
+                          exo_filename_only.replace('.xlsx',
+                                                    '_EXOdevices.json')
+                          ]),
                          file_metadata)
 
     # calc median absolute deviation
@@ -274,7 +278,7 @@ def process_data_frame(df_exo,
 # TODO: apply this filtering to pre and post mad
 #    burst_completion = count_min_n_bursts(count, min_burst_len)
     cut_burst_completion = count_min_n_bursts(cut_count, min_burst_len)
-    logger = logging.getLogger('exolog')
+    logger = logging.getLogger('EXOdevices')
     write_log_file(logger, user_id, fname, interval, min_burst_len,
                    sc_cutoff, datetime_format, df_exo_float, df_exo_float_cut,
                    grouped, grouped_cut, cut_burst_completion, file_metadata)
@@ -356,6 +360,7 @@ def has_numbers(inputString):
 
 
 def write_device_to_json(filename, devices):
+    # TODO: Fix issues with printing unicode characters
     with open(filename, 'w') as outfile:
         json.dump(devices, outfile, indent=4, sort_keys=True,
                   separators=(',', ':'))
