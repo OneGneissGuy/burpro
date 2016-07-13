@@ -127,8 +127,8 @@ def process(exo_filename, output_dir, params):
                                                sc_cutoff,
                                                file_metadata)
 
-
-    #    write_devices(devices_path, file_metadata)
+    write_device_to_json(os.sep.join([output_dir, 'device_meta_data.json']),
+                         file_metadata)
 
     # calc median absolute deviation
     exo_mad = calc_med_abs_dev(log,
@@ -263,8 +263,8 @@ def process_data_frame(df_exo,
     grouped = df_exo_float.groupby(pd.TimeGrouper(str(interval) + "Min"),
                                    sort=False)
 
-    grouped_cut = df_exo_float_cut.groupby(pd.TimeGrouper(str(interval) + "Min"),
-                                           sort=False)
+    grouped_cut = df_exo_float_cut.groupby(pd.TimeGrouper(str(interval) +
+                                           "Min"), sort=False)
 
     start_times, end_times = get_start_end_times(df_exo_float)
     times_to_devices(start_times, end_times, file_metadata)
@@ -355,7 +355,7 @@ def has_numbers(inputString):
         return string
 
 
-def write_devices(filename, devices):
+def write_device_to_json(filename, devices):
     with open(filename, 'w') as outfile:
         json.dump(devices, outfile, indent=4, sort_keys=True,
                   separators=(',', ':'))

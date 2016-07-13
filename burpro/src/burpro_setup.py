@@ -32,18 +32,18 @@ class BurProArgumentParser(argparse.ArgumentParser):
 
 
 def setup_logging(output_dir, version):
-        logging.basicConfig(filename=os.path.join(output_dir, 'burpro.log'))
-        log = logging.getLogger('BurPro')
-        log.setLevel(logging.INFO)
-        log.info('USGS California Water Science Center')
-        log.info('BurPro Revision ' + version)
+    logging.basicConfig(filename=os.path.join(output_dir, 'burpro.log'))
+    log = logging.getLogger('BurPro')
+    log.setLevel(logging.INFO)
+    log.info('USGS California Water Science Center')
+    log.info('BurPro Revision ' + version)
 
-        formatter = logging.Formatter()
-        console = logging.StreamHandler()
-        console.setFormatter(formatter)
-        log.addHandler(console)
+    formatter = logging.Formatter()
+    console = logging.StreamHandler()
+    console.setFormatter(formatter)
+    log.addHandler(console)
 
-        return log
+    return log
 
 
 def setup_logging_metadata(output_dir, version):
@@ -55,6 +55,8 @@ def setup_logging_metadata(output_dir, version):
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
     logger.setLevel(logging.DEBUG)
+    logger.info('USGS California Water Science Center')
+    logger.info('BurPro Revision ' + version)
     return logger
 
 
@@ -73,7 +75,7 @@ def handle_args(version, argv=None):
 
     print('USGS California Water Science Center')
     print('BurPro Revision', version, sep=' ')
-    print('Reading parameters...')
+    print('Reading run parameters...')
 
     parser = BurProArgumentParser(
              description="KOR exo file")
