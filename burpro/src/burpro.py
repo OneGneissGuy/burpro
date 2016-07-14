@@ -33,7 +33,7 @@ def main(argv=None):
     try:
         version = burpro_version()
         files = handle_args(version, argv)
-        print(files)
+#        print(files)
         for exo_filename in files:
             output_dir = setup_output_dir(exo_filename)
             run_log = 'BurPro'

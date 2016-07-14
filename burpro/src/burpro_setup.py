@@ -68,16 +68,61 @@ def handle_args(version, argv=None):
     parser = BurProArgumentParser(
              description="KOR exo file")
     parser.add_argument('nargs', nargs='+')
-#    input_path = parser.parse_args()
-    files = []
+
+    args = []
     for _, value in parser.parse_args()._get_kwargs():
         if value is not None:
-            files.append(value)
-    files = list(chain.from_iterable(files))
-    # files = []
-    for fil in files:
-        list_of_files = fil.split(' ')
-    return list_of_files
+            args.append(value)
+#    print(args)
+    args = list(chain.from_iterable(args))
+    for arg in args:
+        list_of_args = arg.split(' ')
+
+
+    lof = []
+    if len(list_of_args) == 1:  # its one file or one directory
+        if os.path.isdir(list_of_args[0]):  # its a directory
+            direc = list_of_args[0]
+            lof = find_kor_files(direc)
+        else:  # its a file or list of files
+            lof = list_of_args
+    else:  # its a file or its multiple files or multiple directories or a combo!
+        lof = list_of_args
+    return lof
+
+#def handle_args(version, argv=None):
+#    if argv is None:
+#        argv = sys.argv
+#    if len(sys.argv) < 2:
+#        raise Exception('BurPro must be given an input file for processing')
+#    print('USGS California Water Science Center')
+#    print('BurPro Revision', version, sep=' ')
+#    print('Reading run parameters...')
+#    parser = BurProArgumentParser(
+#             description="KOR exo file")
+#    parser.add_argument('nargs', nargs='+')
+##    input_path = parser.parse_args()
+#    files = []
+#    for _, value in parser.parse_args()._get_kwargs():
+#        if value is not None:
+#            files.append(value)
+#    files = list(chain.from_iterable(files))
+#    # files = []
+#    for fil in files:
+#        list_of_files = fil.split(' ')
+#    return list_of_files
+
+
+def find_kor_files(direc):
+    lof = []
+    if os.path.isdir(direc):
+        for root, dirs, files in os.walk(direc, topdown=False):
+            for name in files:
+                lof.append(os.path.join(root, name))
+
+        xls_files = [d for d in lof if d.endswith('.xlsx')]
+        kor_files = [d for d in xls_files if 'mad' not in d]
+        return kor_files
 
 
 def setup_output_dir(exo_filename):

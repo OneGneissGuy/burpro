@@ -1,10 +1,9 @@
 __pycache__
 *.pyc
 *.csv
-burpro/data/*mean.xlsx
-burpro/data/*mad.xlsx
-burpro/data/*median.xlsx
 *.bin
 *.xlsx
-burpro/data/*.bin
 *.egg-info
+burpro/data/
+build/
+dist/
