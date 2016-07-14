@@ -18,6 +18,7 @@ from __future__ import print_function
 import argparse
 import datetime
 import getpass
+from itertools import chain
 import logging
 import os
 import os.path
@@ -38,10 +39,15 @@ def setup_logger(logger_name, log_file, level=logging.INFO):
     fileHandler.setFormatter(formatter)
     streamHandler = logging.StreamHandler()
     streamHandler.setFormatter(formatter)
-
     l.setLevel(level)
     l.addHandler(fileHandler)
     l.addHandler(streamHandler)
+
+
+def takedown_logger(logger_name):
+    l = logging.getLogger(logger_name)
+    l.handlers = [
+        h for h in l.handlers if not isinstance(h, logging.StreamHandler)]
 
 
 def report_setup_error(error):
@@ -56,17 +62,22 @@ def handle_args(version, argv=None):
         argv = sys.argv
     if len(sys.argv) < 2:
         raise Exception('BurPro must be given an input file for processing')
-
     print('USGS California Water Science Center')
     print('BurPro Revision', version, sep=' ')
     print('Reading run parameters...')
-
     parser = BurProArgumentParser(
              description="KOR exo file")
-    parser.add_argument('exo_filename', type=str)
-    input_path = parser.parse_args()
-
-    return input_path.exo_filename
+    parser.add_argument('nargs', nargs='+')
+#    input_path = parser.parse_args()
+    files = []
+    for _, value in parser.parse_args()._get_kwargs():
+        if value is not None:
+            files.append(value)
+    files = list(chain.from_iterable(files))
+    # files = []
+    for fil in files:
+        list_of_files = fil.split(' ')
+    return list_of_files
 
 
 def setup_output_dir(exo_filename):

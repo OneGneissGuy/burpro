@@ -98,9 +98,9 @@ def process(exo_filename, output_dir, params):
     date_col = drop_cols[0]
     time_col = drop_cols[1]
     # end constants
-
     log = logging.getLogger('BurPro')
-    log.info('Reading input...')
+    log.info('Reading input file:' + exo_filename.split(os.sep)[-1])
+    log.info('Please wait...')
     null_value = -9999
     try:
         # if .xlsx file exists, then read it into a dataframe
@@ -306,8 +306,7 @@ def write_output(log, output_dir, exo_filename, exo_mad):
     output_name_only = input_name_only.replace(".xlsx", "_mad.xlsx")
     output_filename = os.path.join(output_dir, output_name_only)
     exo_mad.to_excel(output_filename)
-    # write csv
-    #    exo_mad.to_csv(exo_filename.replace(".xlsx", "_mad.csv"))
+    return
 
 
 def custom_mad(array_like, criteria=2.5,):
