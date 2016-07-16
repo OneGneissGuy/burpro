@@ -49,14 +49,14 @@ def main(argv=None):
             try:
                 print(exo_filename)
                 manage_run(exo_filename, output_dir)
-                takedown_logger(run_log)
-                takedown_logger(device_log)
                 log.info('BurPro done.')
-
             except:
                 # Logger is set up.  Handle an error by logging it and exiting
                 log.error(logging.Formatter().formatException(sys.exc_info()))
                 sys.exit(3)
+            finally:
+                takedown_logger(run_log)
+                takedown_logger(device_log)
     except Exception, setup_error:
         # Logger was not set up.  Report errors to the console.
         report_setup_error(setup_error)

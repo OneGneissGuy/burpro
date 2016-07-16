@@ -27,16 +27,15 @@ import pandas as pd
 import numpy.ma as ma
 import statsmodels.robust.scale as smc
 
-# from burpro_setup import setup_logging, report_setup_error
 
-
-def fetch_file_metadata(dataframe, drop_cols):
+def fetch_file_metadata_json(dataframe, drop_cols):
     #    def rd_kor_exo_file(filename):
     #    frame = pd.read_excel(filename, header=None,)
     #    frame = pd.read_excel(file_path, header=None,)
-    #    frame.to_hdf('temp.hd5', 'df')
-    #    frame = pd.read_hdf('temp.hd5')
+#        frame.to_hdf(r'C:\Users\saraceno\Documents\Code\Crbasic\projects\Rush_ranch_lateral_flux\rush_ranch_lateral_flux\python\temp.hd5', 'df')
+#    frame = pd.read_hdf(r'C:\Users\saraceno\Documents\Code\Crbasic\projects\Rush_ranch_lateral_flux\rush_ranch_lateral_flux\python\temp.hd5')
     frame = dataframe.copy()
+#    drop_cols = json.load(open(r'C:\Users\saraceno\Documents\Code\Python\repos\burpro\burpro\src\config\run_params.json'))['gov.usgs.cawsc.bgctech.burpro']['drop_cols']
     date_col = drop_cols[0]
     time_col = drop_cols[1]
     # find starting row by locating Sonde model indicator field
@@ -86,6 +85,81 @@ def fetch_file_metadata(dataframe, drop_cols):
     return devices
 
 
+def fetch_file_metadata(dataframe, drop_cols):
+    #    def rd_kor_exo_file(filename):
+    #    frame = pd.read_excel(filename, header=None,)
+    #    frame = pd.read_excel(file_path, header=None,)
+#        frame.to_hdf(r'C:\Users\saraceno\Documents\Code\Crbasic\projects\Rush_ranch_lateral_flux\rush_ranch_lateral_flux\python\temp.hd5', 'df')
+  #  frame = pd.read_hdf(r'C:\Users\saraceno\Documents\Code\Crbasic\projects\Rush_ranch_lateral_flux\rush_ranch_lateral_flux\python\temp.hd5')
+    frame = dataframe.copy()
+  #  drop_cols = json.load(open(r'C:\Users\saraceno\Documents\Code\Python\repos\burpro\burpro\src\config\run_params.json'))['gov.usgs.cawsc.bgctech.burpro']['drop_cols']
+    date_col = drop_cols[0]
+    time_col = drop_cols[1]
+    # find starting row by locating Sonde model indicator field
+    nrow = frame.iloc[:, 0].isin([date_col]).idxmax(axis=0, skipna=True)
+
+    devices = extract_sensor_metadata(frame, nrow)
+    dev_col_nums = extract_data_cols(frame, nrow)
+    dev_cols = return_col_names(dev_col_nums, frame.columns.tolist())
+
+    frame = frame.iloc[nrow:, :]
+    frame.columns = frame.iloc[0, :]
+    # rename duplicate columns of sensor swaps
+    cols = pd.Series(frame.columns)  # change to: cols= frame.columns.tolist()
+    for dup in frame.columns.get_duplicates():
+        cols[frame.columns.get_loc(dup)] = [dup + '.' + str(d_idx)
+                                            if d_idx != 0 else dup
+                                            for d_idx in range(
+                                            frame.columns.get_loc(dup).sum())]
+    frame.columns = cols
+    frame.drop(frame.index[0], inplace=True)  # drop header row
+
+    frame_drop_col = drop_columns(frame, drop_cols)
+    frame_drop_cols = frame_drop_col.columns.tolist()
+
+    dev_cols = return_col_names(dev_col_nums, frame.columns.tolist())
+    test_cols = dev_cols
+    final_dev_cols = []
+    tmp = []
+    for item in test_cols:
+        for itm in item:
+            if itm in frame_drop_cols:
+                tmp.append(itm)
+        final_dev_cols.append(tmp)
+        tmp = []
+
+    for counter, entry in enumerate(devices):
+        devices[counter]['Corresponding Data Column(s)'] = ', '.join(final_dev_cols[counter])
+
+    df_time = frame[time_col].copy()
+    df_time = df_time.astype(str)
+    frame['date'] = frame[date_col].apply(
+                    lambda x: datetime.datetime.strftime(x, "%Y-%m-%d"))
+    frame.index = pd.to_datetime(frame['date'] + ' ' + df_time)
+    frame.drop(['date'], axis=1, inplace=True)
+    frame = drop_columns(frame, drop_cols)
+
+    return devices
+
+def extract_sensor_metadata(frame, nrow):
+    """Return a dict of dicts -
+    devices with serial numbers and fw version contained in raw exo frame"""
+    sn_start = frame.iloc[:, 0].isin([u'EXO2 Sonde']).idxmax(axis=0,
+                                                             skipna=True)
+
+    name = frame.iloc[sn_start:nrow-2, 0].tolist()
+    SN = frame.iloc[sn_start:nrow-2, 1].tolist()
+    firmware = frame.iloc[sn_start:nrow-2, 2].tolist()
+    devices = []
+    for counter, entry in enumerate(name):
+        info = {'Device Name': entry,
+                'Serial Number': SN[counter],
+                'Firmware Version': firmware[counter]}
+        devices.append(info)
+
+    return devices
+
+
 def process(exo_filename, output_dir, params):
     # TODO: Move sc_col, sc_cutoff to json file
     sc_col = u'SpCond µS/cm'
@@ -112,7 +186,7 @@ def process(exo_filename, output_dir, params):
 
     log.info('Fetching file metatdata...')
     file_metadata = fetch_file_metadata(df_exo, drop_cols)
-
+    file_metadata_json = fetch_file_metadata_json(df_exo, drop_cols)
     log.info('Processing...')
 
     # make a copy of the read in dataframe for processing
@@ -132,7 +206,7 @@ def process(exo_filename, output_dir, params):
                           exo_filename_only.replace('.xlsx',
                                                     '_EXOdevices.json')
                           ]),
-                         file_metadata)
+                         file_metadata_json)
 
     # calc median absolute deviation
     exo_mad = calc_med_abs_dev(log,
@@ -390,25 +464,6 @@ def get_start_end_times(frame):
         end_times.append(frame.index[end].tolist())
 
     return start_times, end_times
-
-
-def extract_sensor_metadata(frame, nrow):
-    """Return a dict of dicts -
-    devices with serial numbers and fw version contained in raw exo frame"""
-    sn_start = frame.iloc[:, 0].isin([u'EXO2 Sonde']).idxmax(axis=0,
-                                                             skipna=True)
-
-    name = frame.iloc[sn_start:nrow-2, 0].tolist()
-    SN = frame.iloc[sn_start:nrow-2, 1].tolist()
-    firmware = frame.iloc[sn_start:nrow-2, 2].tolist()
-    devices = []
-    for counter, entry in enumerate(name):
-        info = {'Device Name': entry,
-                'Serial Number': SN[counter],
-                'Firmware Version': firmware[counter]}
-        devices.append(info)
-
-    return devices
 
 
 def return_col_names(Corresponding_Data_Column, orig_col_names):

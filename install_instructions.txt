@@ -1,19 +1,12 @@
-# Download Anaconda 2.3.0 for python 2.7.10 64 bit edition (from USGS BitBucket or from BGC-TECH software thumbdrive supplied by Scott Nagel)
+# Download Anaconda 2.3.0 for python 2.7.10 64 bit edition (from BGC-TECH software thumbdrive supplied by Scott Nagel)
 
 # Install Anaconda
 
-# Download BurPro (from USGS BitBucket or from BGC-TECH software thumbdrive supplied by Scott Nagel)
+# Download BurPro ( from BGC-TECH software thumbdrive supplied by Scott Nagel)
 
 # Unzip BurPro (to user directory)
 
 # cd into burpro directory
 
-# Automatically install dependencies at command line using:
+# Double click install_burpro.dat
 
-# "python setup.py install"
-
-# OR 
-
-# Manually install dependencies at command line using:
-
-# "pip install -r requirements.txt"
