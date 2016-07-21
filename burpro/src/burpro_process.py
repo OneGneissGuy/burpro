@@ -27,65 +27,7 @@ import pandas as pd
 import numpy.ma as ma
 import statsmodels.robust.scale as smc
 
-
-def fetch_file_metadata_json(dataframe, drop_cols):
-    #    def rd_kor_exo_file(filename):
-    #    frame = pd.read_excel(filename, header=None,)
-    #    frame = pd.read_excel(file_path, header=None,)
-#        frame.to_hdf(r'C:\Users\saraceno\Documents\Code\Crbasic\projects\Rush_ranch_lateral_flux\rush_ranch_lateral_flux\python\temp.hd5', 'df')
-#    frame = pd.read_hdf(r'C:\Users\saraceno\Documents\Code\Crbasic\projects\Rush_ranch_lateral_flux\rush_ranch_lateral_flux\python\temp.hd5')
-    frame = dataframe.copy()
-#    drop_cols = json.load(open(r'C:\Users\saraceno\Documents\Code\Python\repos\burpro\burpro\src\config\run_params.json'))['gov.usgs.cawsc.bgctech.burpro']['drop_cols']
-    date_col = drop_cols[0]
-    time_col = drop_cols[1]
-    # find starting row by locating Sonde model indicator field
-    nrow = frame.iloc[:, 0].isin([date_col]).idxmax(axis=0, skipna=True)
-
-    devices = extract_sensor_metadata(frame, nrow)
-    dev_col_nums = extract_data_cols(frame, nrow)
-    dev_cols = return_col_names(dev_col_nums, frame.columns.tolist())
-
-    frame = frame.iloc[nrow:, :]
-    frame.columns = frame.iloc[0, :]
-    # rename duplicate columns of sensor swaps
-    cols = pd.Series(frame.columns)  # change to: cols= frame.columns.tolist()
-    for dup in frame.columns.get_duplicates():
-        cols[frame.columns.get_loc(dup)] = [dup + '.' + str(d_idx)
-                                            if d_idx != 0 else dup
-                                            for d_idx in range(
-                                            frame.columns.get_loc(dup).sum())]
-    frame.columns = cols
-    frame.drop(frame.index[0], inplace=True)  # drop header row
-
-    frame_drop_col = drop_columns(frame, drop_cols)
-    frame_drop_cols = frame_drop_col.columns.tolist()
-
-    dev_cols = return_col_names(dev_col_nums, frame.columns.tolist())
-    test_cols = dev_cols
-    final_dev_cols = []
-    tmp = []
-    for item in test_cols:
-        for itm in item:
-            if itm in frame_drop_cols:
-                tmp.append(itm)
-        final_dev_cols.append(tmp)
-        tmp = []
-
-    for counter, entry in enumerate(devices):
-        devices[counter]['Corresponding Data Column(s)'] = final_dev_cols[counter]
-
-    df_time = frame[time_col].copy()
-    df_time = df_time.astype(str)
-    frame['date'] = frame[date_col].apply(
-                    lambda x: datetime.datetime.strftime(x, "%Y-%m-%d"))
-    frame.index = pd.to_datetime(frame['date'] + ' ' + df_time)
-    frame.drop(['date'], axis=1, inplace=True)
-    frame = drop_columns(frame, drop_cols)
-
-    return devices
-
-
-def fetch_file_metadata(dataframe, drop_cols):
+def fetch_file_metadata(dataframe, drop_cols, jsonfile=False):
     #    def rd_kor_exo_file(filename):
     #    frame = pd.read_excel(filename, header=None,)
     #    frame = pd.read_excel(file_path, header=None,)
@@ -129,7 +71,10 @@ def fetch_file_metadata(dataframe, drop_cols):
         tmp = []
 
     for counter, entry in enumerate(devices):
-        devices[counter]['Corresponding Data Column(s)'] = ', '.join(final_dev_cols[counter])
+        if jsonfile is False:
+            devices[counter]['Corresponding Data Column(s)'] = ', '.join(final_dev_cols[counter])
+        else:
+            devices[counter]['Corresponding Data Column(s)'] = final_dev_cols[counter]
 
     df_time = frame[time_col].copy()
     df_time = df_time.astype(str)
@@ -140,6 +85,7 @@ def fetch_file_metadata(dataframe, drop_cols):
     frame = drop_columns(frame, drop_cols)
 
     return devices
+
 
 def extract_sensor_metadata(frame, nrow):
     """Return a dict of dicts -
@@ -161,7 +107,6 @@ def extract_sensor_metadata(frame, nrow):
 
 
 def process(exo_filename, output_dir, params):
-    # TODO: Move sc_col, sc_cutoff to json file
     sc_col = u'SpCond µS/cm'
     sc_cutoff = 60
     interval = params.get('interval', 15)
@@ -182,31 +127,30 @@ def process(exo_filename, output_dir, params):
     except IOError, ioerr:
         # otherwise, break out of the script with an error message
         log.info(ioerr.message)
+        log.info("The file could not be read into a datframe")
 #        report_setup_error(ioerr)
 
     log.info('Fetching file metatdata...')
-    file_metadata = fetch_file_metadata(df_exo, drop_cols)
-    file_metadata_json = fetch_file_metadata_json(df_exo, drop_cols)
+    file_metadata = fetch_file_metadata(df_exo, drop_cols, False)
+    file_metadata_json = fetch_file_metadata(df_exo, drop_cols, True)
     log.info('Processing...')
-
+    logger = logging.getLogger('EXOdevices')
     # make a copy of the read in dataframe for processing
-    df_exo_float, grouped = process_data_frame(df_exo,
-                                               date_col,
-                                               time_col,
-                                               drop_cols,
-                                               null_value,
-                                               index_timezone,
-                                               interval,
-                                               sc_col,
-                                               sc_cutoff,
-                                               file_metadata)
+    df_exo_float, grouped, cut_burst_completion = process_data_frame(df_exo,
+                                                                     date_col,
+                                                                     time_col,
+                                                                     drop_cols,
+                                                                     null_value,
+                                                                     index_timezone,
+                                                                     interval,
+                                                                     sc_col,
+                                                                     sc_cutoff,
+                                                                     file_metadata,
+                                                                     exo_filename,
+                                                                     logger)
+
+
     exo_filename_only = exo_filename.split(os.sep)[-1]
-    write_device_to_json(os.sep.join(
-                         [output_dir,
-                          exo_filename_only.replace('.xlsx',
-                                                    '_EXOdevices.json')
-                          ]),
-                         file_metadata_json)
 
     # calc median absolute deviation
     exo_mad = calc_med_abs_dev(log,
@@ -214,26 +158,37 @@ def process(exo_filename, output_dir, params):
                                grouped,
                                mad_criteria,
                                null_value)
-
     write_output(log, output_dir, exo_filename, exo_mad)
+
+    start_times, end_times = get_start_end_times(exo_mad)
+    times_to_devices(start_times, end_times, file_metadata)
+
+    write_devices_to_log_file(logger, file_metadata)
+
+    write_burst_completion_to_log_file(logger, cut_burst_completion)
+
+    write_device_to_json(os.sep.join(
+                         [output_dir,
+                          exo_filename_only.replace('.xlsx',
+                                                    '_EXOdevices.json')
+                          ]),
+                         file_metadata_json)
+
     log.info('Processing complete.')
 
 
 def write_log_file(logger, user_id, fname, interval, min_burst_len,
                    sc_cutoff, datetime_format, exo, exo_cut,
-                   grouped, grouped_cut, cut_burst_completion, devices):
-    # def write_log_file(*pargs, **kwargs):
-    #    write_log_file(logger, user_id, fname, interval, min_burst_len,
-    #                   sc_cutoff, datetime_format, exo, exo_cut, grouped,
-    #                   grouped_cut, cut_burst_completion)
-    logger.info('THIS IS AN EXO DEPLOYMENT LOG FILE!!!')
+                   grouped, grouped_cut):
+
+    logger.info("~~~~~~~~~~~~~~~~~~~~~~EXO Deployment log file~~~~~~~~~~~~~~")
     logger.info("User: %s", user_id)
     logger.info("Processed file: %s", fname)
     logger.info("Sample interval: %d minutes", interval)
     logger.info("Minimum number of measurements in each burst: %d",
                 min_burst_len)
     logger.info("Specific conductance cutoff level: %d", sc_cutoff)
-    logger.info("~~~~~~~~~~~~~~~~~~~~~~Deployment metadata~~~~~~~~~~~~~~~")
+    logger.info("~~~~~~~~~~~~~~~~~~~~~~Deployment metadata~~~~~~~~~~~~~~~~~~")
     logger.info("First record timestamp: %s",
                 exo.index[0].strftime(datetime_format))
     logger.info("Last record timestamp: %s",
@@ -249,6 +204,9 @@ def write_log_file(logger, user_id, fname, interval, min_burst_len,
     logger.info("Number of bursts cut from record: %d",
                 grouped.ngroups - grouped_cut.ngroups)
 
+
+def write_devices_to_log_file(logger, devices):
+
     logger.info("~~~~~~~~~~~~~~~~~~~~~~Sensor metadata~~~~~~~~~~~~~~~~~~~")
 
     sn_field = 'Serial Number'
@@ -263,11 +221,14 @@ def write_log_file(logger, user_id, fname, interval, min_burst_len,
                     devices[count]['Corresponding Data Column(s)'],)
         logger.info("%s Start Datetime: %s",
                     devices[count]['Device Name'],
+
                     devices[count]['Start time'],)
         logger.info("%s End Datetime: %s",
                     devices[count]['Device Name'],
                     devices[count]['End time'],)
 
+
+def write_burst_completion_to_log_file(logger, cut_burst_completion):
     logger.info("~~~~~~~~~~~~~~~~~~~~~~Burst completeness data~~~~~~~~~~~")
     for entry in sorted(cut_burst_completion.keys()):
         logger.info("%s burst completeness percentage: %3.2f",
@@ -283,9 +244,10 @@ def process_data_frame(df_exo,
                        interval,
                        sc_col,
                        sc_cutoff,
-                       file_metadata):
-
-    fname = 'Test_datafilename'
+                       file_metadata,
+                       exofilename,
+                       logger):
+    fname = exofilename.split(os.sep)[-1] #TODO:split this
     min_burst_len = 20
     datetime_format = "%Y-%m-%d %H:%M"
     user_id = getpass.getuser()
@@ -344,27 +306,27 @@ def process_data_frame(df_exo,
     grouped_cut = df_exo_float_cut.groupby(pd.TimeGrouper(str(interval) +
                                            "Min"), sort=False)
 
-    start_times, end_times = get_start_end_times(df_exo_float)
-    times_to_devices(start_times, end_times, file_metadata)
+#    start_times, end_times = get_start_end_times(df_exo_float)
+#    times_to_devices(start_times, end_times, file_metadata)
 
     cut_count = grouped_cut.count()
 #    count = grouped.count()
 # TODO: apply this filtering to pre and post mad
 #    burst_completion = count_min_n_bursts(count, min_burst_len)
     cut_burst_completion = count_min_n_bursts(cut_count, min_burst_len)
-    logger = logging.getLogger('EXOdevices')
+
     write_log_file(logger, user_id, fname, interval, min_burst_len,
                    sc_cutoff, datetime_format, df_exo_float, df_exo_float_cut,
-                   grouped, grouped_cut, cut_burst_completion, file_metadata)
+                   grouped, grouped_cut)
 
-    return df_exo_float_cut, grouped_cut
+    return df_exo_float_cut, grouped_cut, cut_burst_completion
 
 
 def calc_med_abs_dev(log, df_exo_float, grouped, mad_criteria, null_value):
     exo_mad = pd.DataFrame()
     # apply the mad calculation column wise to data frame
     for i in np.arange(0, len(df_exo_float.columns), 1):
-        step_number = '    (' + df_exo_float.columns[i] + ')'
+        step_number = 'Paramter: ' + df_exo_float.columns[i]
         log.info(step_number)
         exo_mad[df_exo_float.columns[i]] = grouped[
                                            df_exo_float.columns[i]].apply(
@@ -443,6 +405,7 @@ def write_device_to_json(filename, devices):
 def times_to_devices(start_times, end_times, devices):
     datetime_format = "%Y-%m-%d %H:%M:%S"
     for i, key in enumerate(devices):
+#        key['Start time'] = key.setdefault('Start time', datetime.datetime.now())
         key['Start time'] = datetime.datetime.strftime(start_times[i][0],
                                                        datetime_format)
         key['End time'] = datetime.datetime.strftime(end_times[i][0],

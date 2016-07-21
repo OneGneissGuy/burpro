@@ -47,7 +47,7 @@ def main(argv=None):
             log.info('USGS California Water Science Center')
             log.info('BurPro Revision ' + version)
             try:
-                print(exo_filename)
+                # print(exo_filename)
                 manage_run(exo_filename, output_dir)
                 log.info('BurPro done.')
             except:
@@ -64,7 +64,9 @@ def main(argv=None):
 
 def burpro_version():
     # TODO: Return production code version, not current date when src is stable
-    return datetime.datetime.now().strftime("%Y-%m-%d")
+    s = 'Release date: 07-21-2016'
+    return s
+    # return datetime.datetime.now().strftime("%Y-%m-%d")
 
 if __name__ == "__main__":
     sys.exit(main())
