@@ -207,7 +207,7 @@ def write_log_file(logger, user_id, fname, interval, min_burst_len,
 
 def write_devices_to_log_file(logger, devices):
 
-    logger.info("~~~~~~~~~~~~~~~~~~~~~~Sensor metadata~~~~~~~~~~~~~~~~~~~")
+    logger.info("~~~~~~~~~~~~~~~~~~~~~~Sensor metadata~~~~~~~~~~~~~~~~~~~~~~")
 
     sn_field = 'Serial Number'
     fw_field = 'Firmware Version'
@@ -229,7 +229,7 @@ def write_devices_to_log_file(logger, devices):
 
 
 def write_burst_completion_to_log_file(logger, cut_burst_completion):
-    logger.info("~~~~~~~~~~~~~~~~~~~~~~Burst completeness data~~~~~~~~~~~")
+    logger.info("~~~~~~~~~~~~~~~~~~~~~~Burst completeness data~~~~~~~~~~~~~~")
     for entry in sorted(cut_burst_completion.keys()):
         logger.info("%s burst completeness percentage: %3.2f",
                     entry, cut_burst_completion[entry])
@@ -306,13 +306,8 @@ def process_data_frame(df_exo,
     grouped_cut = df_exo_float_cut.groupby(pd.TimeGrouper(str(interval) +
                                            "Min"), sort=False)
 
-#    start_times, end_times = get_start_end_times(df_exo_float)
-#    times_to_devices(start_times, end_times, file_metadata)
 
     cut_count = grouped_cut.count()
-#    count = grouped.count()
-# TODO: apply this filtering to pre and post mad
-#    burst_completion = count_min_n_bursts(count, min_burst_len)
     cut_burst_completion = count_min_n_bursts(cut_count, min_burst_len)
 
     write_log_file(logger, user_id, fname, interval, min_burst_len,
@@ -326,7 +321,7 @@ def calc_med_abs_dev(log, df_exo_float, grouped, mad_criteria, null_value):
     exo_mad = pd.DataFrame()
     # apply the mad calculation column wise to data frame
     for i in np.arange(0, len(df_exo_float.columns), 1):
-        step_number = 'Paramter: ' + df_exo_float.columns[i]
+        step_number = 'Parameter: ' + df_exo_float.columns[i]
         log.info(step_number)
         exo_mad[df_exo_float.columns[i]] = grouped[
                                            df_exo_float.columns[i]].apply(

@@ -62,7 +62,7 @@ def read_json_file(json_file_path):
 
 
 def schema_json():
-    #TODO: read in schema from a json file
+    # TODO: read in schema from a json file
     schema = {
         "type": "object",
         "properties": {

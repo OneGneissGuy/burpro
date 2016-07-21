@@ -49,14 +49,15 @@ def main(argv=None):
             try:
                 # print(exo_filename)
                 manage_run(exo_filename, output_dir)
-                log.info('BurPro done.')
             except:
                 # Logger is set up.  Handle an error by logging it and exiting
                 log.error(logging.Formatter().formatException(sys.exc_info()))
                 sys.exit(3)
             finally:
+                log.info('BurPro done.')
                 takedown_logger(run_log)
                 takedown_logger(device_log)
+
     except Exception, setup_error:
         # Logger was not set up.  Report errors to the console.
         report_setup_error(setup_error)
@@ -64,7 +65,10 @@ def main(argv=None):
 
 def burpro_version():
     # TODO: Return production code version, not current date when src is stable
-    s = 'Release date: 07-21-2016'
+    version = '1.0,'
+    release = 'Beta,'
+    date = '07-21-2016'
+    s = release + version + date
     return s
     # return datetime.datetime.now().strftime("%Y-%m-%d")
 
