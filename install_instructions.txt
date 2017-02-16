@@ -8,5 +8,5 @@
 
 # cd into burpro directory
 
-# Double click install_burpro.dat
+# Double click install_burpro.bat
 
