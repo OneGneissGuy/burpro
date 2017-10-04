@@ -28,13 +28,7 @@ import numpy.ma as ma
 import statsmodels.robust.scale as smc
 
 def fetch_file_metadata(dataframe, drop_cols, jsonfile=False):
-    #    def rd_kor_exo_file(filename):
-    #    frame = pd.read_excel(filename, header=None,)
-    #    frame = pd.read_excel(file_path, header=None,)
-#        frame.to_hdf(r'C:\Users\saraceno\Documents\Code\Crbasic\projects\Rush_ranch_lateral_flux\rush_ranch_lateral_flux\python\temp.hd5', 'df')
-  #  frame = pd.read_hdf(r'C:\Users\saraceno\Documents\Code\Crbasic\projects\Rush_ranch_lateral_flux\rush_ranch_lateral_flux\python\temp.hd5')
     frame = dataframe.copy()
-  #  drop_cols = json.load(open(r'C:\Users\saraceno\Documents\Code\Python\repos\burpro\burpro\src\config\run_params.json'))['gov.usgs.cawsc.bgctech.burpro']['drop_cols']
     date_col = drop_cols[0]
     time_col = drop_cols[1]
     # find starting row by locating Sonde model indicator field

@@ -40,9 +40,8 @@ def read_json_params():
     #TODO: Look for json exo file direc then look in bat directory, etc.
     script_path, script_name_only = os.path.split(os.path.realpath(__file__))
     json_filename = os.path.join(script_path, 'config', 'run_params.json')
-    #    # read json file
+    # read json file
 
-    validate_json(json_filename)
     run_params = read_json_file(json_filename)
     params = run_params['gov.usgs.cawsc.bgctech.burpro']
 
@@ -91,16 +90,4 @@ def schema_json():
     return schema
 
 
-def validate_json(json_data_file):
-    """this function validates a json file based
-        on schema_json func return"""
-    json_data = read_json_file(json_data_file)
-    json_data = json_data[json_data.keys()[0]]
-    schema = schema_json()
-    try:
-        validictory.validate(json_data, schema)
-    except ValueError, error:
-        #        print('Check json file format for errors')
-        print(error.message)
-    finally:
-        return
+

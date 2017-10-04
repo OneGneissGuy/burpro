@@ -65,9 +65,9 @@ def main(argv=None):
 
 def burpro_version():
     # TODO: Return production code version, not current date when src is stable
-    version = '1.0,'
-    release = 'Beta,'
-    date = '07-21-2016'
+    version = '1.1,'
+    release = 'Production,'
+    date = '10-04-2017'
     s = release + version + date
     return s
     # return datetime.datetime.now().strftime("%Y-%m-%d")
