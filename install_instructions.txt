@@ -1,12 +1,11 @@
-# Download Anaconda 2.3.0 for python 2.7.10 64 bit edition (from BGC-TECH software thumbdrive supplied by Scott Nagel)
+# Get Anaconda for python 2.7, 64-bit edition and BurPro from BGC-TECH software thumbdrive supplied by Thomas Johnston
 
-# Install Anaconda
+# Install Anaconda onto PC
 
-# Download BurPro ( from BGC-TECH software thumbdrive supplied by Scott Nagel)
+# Get BurPro (from BGC-TECH software thumbdrive supplied by Thomas Johnston)
 
 # Unzip BurPro (to user directory)
 
 # cd into burpro directory
 
-# Double click install_burpro.bat
 
